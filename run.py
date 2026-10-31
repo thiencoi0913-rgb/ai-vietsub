@@ -8,7 +8,7 @@ if not GEMINI_KEY:
 
 client = genai.Client(api_key=GEMINI_KEY)
 
-CHANNEL_SUB_NAME = "IYaN AI"
+CHANNEL_SUB_NAME = "BT vietsub"
 
 CONFIG = {
     "models": ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.8-flash"],
