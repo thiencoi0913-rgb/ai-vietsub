@@ -1,6 +1,8 @@
-name: Tự Động Vietsub Video
+name: Tự Động Vietsub Video từ Release
 
 on:
+  release:
+    types: [published] # Tự động chạy ngay khi bạn bấm nút Phát hành màu xanh
   workflow_dispatch:
 
 permissions:
@@ -31,17 +33,21 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Chạy Script Xử Lý Video
+      - name: Lấy video bạn vừa gửi ở Release về xử lý
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p input_videos
+          gh release download ${{ github.event.release.tag_name }} --pattern "*.mp4" --pattern "*.mov" --dir input_videos/ || true
+
+      - name: Chạy Script Vietsub & Lồng tiếng
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python run.py
 
-      - name: Đăng video thẳng lên mục Releases
-        uses: softprops/action-gh-release@v2
-        if: success()
-        with:
-          tag_name: vietsub-run-${{ github.run_number }}
-          name: "Video Hoàn Thành - Lượt #${{ github.run_number }}"
-          body: "Render và lồng tiếng hoàn tất lúc đi ngủ!"
-          files: output_videos/*
+      - name: Đẩy video thành phẩm ngược lại đúng Release này
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} output_videos/* --clobber
