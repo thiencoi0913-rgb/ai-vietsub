@@ -11,7 +11,6 @@ client = genai.Client(api_key=GEMINI_KEY)
 CHANNEL_SUB_NAME = "IYaN AI"
 
 CONFIG = {
-    # Ưu tiên các model phiên bản cao theo yêu cầu của bạn
     "models": ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.8-flash"],
     "voice": "CapCut - Nguồn Nhỏ Ngọt Ngào (BV421)",
     "font_family": "Comfortaa",
@@ -247,10 +246,10 @@ def main():
         video_files.extend(glob.glob(os.path.join(input_dir, ext)))
 
     if not video_files:
-        print(f"[!] Chưa có video trong thư mục '{input_dir}'.")
+        print("[!] Không tìm thấy file video nào được tải lên Release!")
         return
 
-    print(f"🚀 Bắt đầu xử lý {len(video_files)} video...")
+    print(f"🚀 Tìm thấy {len(video_files)} video. Bắt đầu render...")
 
     for idx, video_path in enumerate(video_files, 1):
         clean_trash()
@@ -263,7 +262,7 @@ def main():
             y1, y2 = detect_sub_zone_from_frame(video_path, first_sec, CONFIG["models"][0])
             tts_p = build_synced_tts_track(srt_p, CONFIG["voice"])
             render_final_video_auto(video_path, srt_p, tts_p, out_name, CHANNEL_SUB_NAME, y1, y2)
-            print(f"[✓] XUẤT XONG: {out_name}")
+            print(f"[✓] HOÀN THÀNH: {out_name}")
         except Exception as e:
             print(f"[❌] Lỗi video {base_name}: {e}")
         clean_trash()
