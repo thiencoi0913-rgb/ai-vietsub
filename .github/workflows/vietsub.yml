@@ -2,7 +2,7 @@ name: Tự Động Vietsub Video từ Release
 
 on:
   release:
-    types: [published] # Tự động chạy ngay khi bạn bấm nút Phát hành màu xanh
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -33,12 +33,19 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Lấy video bạn vừa gửi ở Release về xử lý
+      - name: Tự động tìm và tải video từ Release mới nhất
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p input_videos
-          gh release download ${{ github.event.release.tag_name }} --pattern "*.mp4" --pattern "*.mov" --dir input_videos/ || true
+          # Tự động lấy Tag của bản Release mới nhất
+          TAG="${{ github.event.release.tag_name }}"
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+          fi
+          echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+          echo "Tìm thấy bản Release có nhãn: $TAG"
+          gh release download "$TAG" --dir input_videos/ || true
 
       - name: Chạy Script Vietsub & Lồng tiếng
         env:
@@ -46,8 +53,14 @@ jobs:
         run: |
           python run.py
 
-      - name: Đẩy video thành phẩm ngược lại đúng Release này
+      - name: Đẩy video thành phẩm lên lại Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload ${{ github.event.release.tag_name }} output_videos/* --clobber
+          if ls output_videos/*.mp4 1> /dev/null 2>&1; then
+            gh release upload "$TAG_NAME" output_videos/* --clobber
+            echo "Đã đẩy video thành phẩm lên Release thành công!"
+          else
+            echo "Chưa có video nào được render."
+            exit 1
+          fi
